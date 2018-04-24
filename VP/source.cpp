@@ -101,13 +101,13 @@ void visit(string path, Mat(*func)(string))
 			continue;
 		}
 
-		if ((_A_SUBDIR == filefind.attrib)) //ÊÇÄ¿Â¼  
+		if ((_A_SUBDIR == filefind.attrib))   
 		{
 			printf("----------%s\n", filefind.name);
 			cout << filefind.name << "(dir)" << endl;
 			curr = path + "\\" + filefind.name;
 		}
-		else//ÊÇÎÄ¼þ       
+		else   
 		{
 			time_t start, stop;
 			string filePath = path + "\\" + filefind.name;
@@ -140,8 +140,8 @@ Mat computeVpScore(string filePath)
 	int m = image.rows, n = image.cols;
 	cout << img_gray.rows << endl;
 
-	Mat scores(m, n, CV_32F);
-	//float scores[85][128];
+	//Mat scores(m, n, CV_32F);
+	float scores[85][128];
 	float ***gabors = new float**[m];
 	for_each(gabors, gabors + m, [n](float** &x) {x = new float*[n]; });
 	for_each(gabors, gabors + m, [n, n_theta](float** x) {for_each(x, x + n, [&, n_theta](float* &y) { y = new float[n_theta]; }); });
@@ -195,8 +195,8 @@ Mat computeVpScore(string filePath)
 	{
 		for (int j = 0; j < n; j++)
 		{
-			scores.at<float>(i, j) = 0;
-			//scores[i][j];
+			//scores.at<float>(i, j) = 0;
+			scores[i][j]=0;
 			float tmepScore = 0;
 			for (int i1 = i + 1; i1 < m && i1<i + 40; i1++)
 			{
@@ -219,17 +219,20 @@ Mat computeVpScore(string filePath)
 					}
 				}
 			}
-			scores.at<float>(i, j) = tmepScore;
+			//scores.at<float>(i, j) = tmepScore;
+			scores[i][j] = tmepScore;
 		}
 	}
 
 	Point p_max, p_min;
 	double score_max, score_min;
-	cv::minMaxLoc(scores, &score_min, &score_max, &p_min, &p_max);
+	Mat matscores(m, n, CV_32F);
+	memcpy(matscores.data, scores, m*n * sizeof(float));
+	cv::minMaxLoc(matscores, &score_min, &score_max, &p_min, &p_max);
 	float scale = score_max / 255.0f;
-	for (int i = 0; i < m; i++)
-		for (int j = 0; j < n; j++)
-			scores.at<float>(i, j) = round(scores.at<float>(i, j) / scale);
+	//for (int i = 0; i < m; i++)
+	//	for (int j = 0; j < n; j++)
+	//		matscores.at<float>(i, j) = round(matscores.at<float>(i, j) / scale);
 
 	cv::circle(image_origin, cvPoint(p_max.x / scale_factor, p_max.y / scale_factor), 10, Scalar(0), 5, 8, 0);
 
