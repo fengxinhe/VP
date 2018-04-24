@@ -23,6 +23,7 @@ Mat oddKernels[36], evenKernels[36];
 
 void myGaborKernel(float theta, Mat &oddKernel, Mat &evenKernel)
 {
+	//gittest
 	float lamda = 5.0f;
 	int size_kernel = 17;
 	float sigma = (float)size_kernel / 9.0f;
