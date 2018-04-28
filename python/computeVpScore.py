@@ -6,10 +6,42 @@ Created on Wed Apr 25 16:42:23 2018
 """
 import numpy as np
 import cv2
+from math import cos, sin, exp, pi,acos
+import time
+import os
 
-arcMatrix=np.zeros((200,400), dtyps="vals")
+vals=np.dtype([("arc",np.float32),("d", np.float32)])
+arcMatrix=np.zeros((200,400), dtype=vals)
 oddKernels=np.zeros(36)
 evenKernels=np.zeros(36)
+
+def myGarborKernel(ksize, sigma, theta, Lambda, psi, gamma, ktype):
+    k = (ksize - 1) / 2
+    odd_kernel = np.zeros((ksize,ksize), np.float32)
+    even_kernel = np.zeros((ksize, ksize), np.float32)
+    for i in range(-k, k+1):
+        for j in range(-k, k+1):
+            a = i * cos(theta) + j * sin(theta)
+            b = j * cos(theta) - i * sin(theta)
+            odd_resp = exp(-1.0/8.0/sigma/sigma*(4.0*a*a+b*b)) * sin(2.0*pi*a/Lambda)
+            even_resp = exp(-1.0/8.0/sigma/sigma*(4.0*a*a+b*b)) * cos(2.0*pi*a/Lambda)
+            odd_kernel[i+k, j+k] = odd_resp
+            even_kernel[i+k, j+k] = even_resp
+
+    odd_mean = odd_kernel.mean()
+    even_mean = even_kernel.mean()
+    odd_kernel = odd_kernel - odd_mean
+    even_kernel = even_kernel - even_mean
+
+    odd_square_sum = np.sum(odd_kernel**2)
+    even_square_sum = np.sum(even_kernel**2)
+    l2_sum_odd = odd_square_sum / (17.0*17.0)
+    l2_sum_even = even_square_sum / (17.0*17.0)
+
+    odd_kernel = odd_kernel / l2_sum_odd
+    even_kernel = even_kernel / l2_sum_even
+
+    return [odd_kernel, even_kernel]
 
 def computeVpScore(filePath):
     
@@ -54,7 +86,7 @@ def computeVpScore(filePath):
             for j in range(n):
                 gabors[i][j][t]=np.power(oddfiltered[i][j],2.0)+np.power(evenfiltered[i][j],2.0)
      
-    directions=np.zeros((m,n),np.float32)
+    directions=np.zeros((m,n),np.uint8)
     for i in range(m):
         for j in range(n):
             directions[i][j]=np.max(gabors[i][j])-gabors[i][j]
@@ -70,7 +102,7 @@ def computeVpScore(filePath):
             for i1 in range(i+1,m):
                 for j1 in range(n):
                     c=directions[i1][j1]/n_theta*180.0
-                    gamma=arcMatrix[i1-1][j1-j+200].arc
+                    gamma=arcMatrix[i1-1][j1-j+200]["arc"]
                     if(np.abs(c-gamma)<thresh):
                         tempScore +=1
             scores[i][j]=tempScore    
@@ -83,3 +115,49 @@ def computeVpScore(filePath):
     cv2.circle(image_origin,(x,y),10,(0,0,0),5,8,0)
     return image_origin     
      
+def visit(directory_in_str):
+
+    directory = os.fsencode(directory_in_str)
+    for file in os.listdir(directory):
+        filename = os.fsdecode(file)
+        if filename:
+            input_path = directory_in_str + "/" + filename
+            # inputPath = directory_in_str + "\\" + filename
+            print("Processing %s", input_path)
+            start = time.time()
+            result_mat = computeVpScore(input_path)
+            end = time.time()
+            print("Use time: %f sec", (end-start))
+            output_path = directory_in_str + "/results" + filename
+            # output_path = directory_in_str + "\\results" + filename
+            cv2.imwrite(output_path, result_mat)
+    if not filename:
+        print("No valid input file.")
+
+PI=3.141592653
+for j in range(200):
+    for i in range(400):
+        t1=np.sqrt(np.power(i-200.0, 2.0)+np.power(j,2.0))
+        arcMatrix[j][i]["arc"] = acos((200.0-i)/t1)/PI*180.0
+        arcMatrix[j][i][["d"] = t1
+
+n_theta=36
+for t in range(n_theta):
+    theta=PI*t/n_theta
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
