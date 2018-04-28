@@ -70,7 +70,7 @@ def computeVpScore(filePath):
      #float scores[85][128];
     scores=np.zeros((m,n),np.float32)
 	#float ***gabors = new float**[m];
-    gabors = np.zeros((m,n,n_theta),np.float32)
+    gabors = np.zeros((n_theta,n,m),np.float32)
 	#for_each(gabors, gabors + m, [n](float** &x) {x = new float*[n]; });
 	#for_each(gabors, gabors + m, [n, n_theta](float** x) {for_each(x, x + n, [&, n_theta](float* &y) { y = new float[n_theta]; }); });
 
@@ -140,7 +140,6 @@ for j in range(200):
         t1=np.sqrt(np.power(i-200.0, 2.0)+np.power(j,2.0))
         arcMatrix[j][i]["arc"] = acos((200.0-i)/t1)/PI*180.0
         arcMatrix[j][i][["d"] = t1
-
 n_theta=36
 for t in range(n_theta):
     theta=PI*t/n_theta
