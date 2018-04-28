@@ -70,7 +70,7 @@ def computeVpScore(filePath):
      #float scores[85][128];
     scores=np.zeros((m,n),np.float32)
 	#float ***gabors = new float**[m];
-    gabors = np.zeros((n_theta,n,m),np.float32)
+    gabors = np.zeros((m,n,n_theta),np.float32)
 	#for_each(gabors, gabors + m, [n](float** &x) {x = new float*[n]; });
 	#for_each(gabors, gabors + m, [n, n_theta](float** x) {for_each(x, x + n, [&, n_theta](float* &y) { y = new float[n_theta]; }); });
 
@@ -89,7 +89,7 @@ def computeVpScore(filePath):
     directions=np.zeros((m,n),np.uint8)
     for i in range(m):
         for j in range(n):
-            directions[i][j]=np.max(gabors[i][j])-gabors[i][j]
+            directions[i][j]=np.max(gabors[i][j])-gabors[i][j][0]
     
     thresh=2.0*180/n_theta
     #r=(m+n)/7
